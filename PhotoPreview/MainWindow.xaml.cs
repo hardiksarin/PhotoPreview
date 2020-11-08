@@ -22,7 +22,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO.Compression;
-
+using System.Diagnostics;
 
 namespace PhotoPreview
 {
@@ -264,7 +264,14 @@ namespace PhotoPreview
 
         private void imgDynamic_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            System.Diagnostics.Process.Start(resourceUri.ToString());
+            Uri resourceUris = new Uri("C:\\Users\\sarin\\Documents\\Scented Candels\\BoxInside.jpg", UriKind.Absolute);
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = ("C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2020.20070.10002.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe");
+            startInfo.Arguments = string.Format("\"{0}\" \"{1}\"", resourceUris, resourceUri);
+            Process.Start(startInfo);
+
+            //System.Diagnostics.Process.Start(resourceUri.ToString(), resourceUris.ToString());
 
         }
     }
