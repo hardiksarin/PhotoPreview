@@ -21,7 +21,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Windows.Storage;
+using System.IO.Compression;
+
 
 namespace PhotoPreview
 {
@@ -30,6 +31,7 @@ namespace PhotoPreview
     /// </summary>
     public partial class MainWindow : Window
     {
+        Uri resourceUri;
         public MainWindow()
         {
             InitializeComponent();
@@ -47,9 +49,9 @@ namespace PhotoPreview
 
             }*/
         }
-        private void BtnLoadFromResource_Click(object sender, RoutedEventArgs e)
+        public void BtnLoadFromResource_Click(object sender, RoutedEventArgs e)
         {
-            Uri resourceUri = new Uri("C:\\Users\\sarin\\Documents\\Scented Candels\\FrontLogo.png", UriKind.Absolute);
+            resourceUri = new Uri("C:\\Users\\sarin\\Documents\\Scented Candels\\FrontLogo.png", UriKind.Absolute);
             imgDynamic.Source = new BitmapImage(resourceUri);
         }
 
@@ -67,7 +69,7 @@ namespace PhotoPreview
         private void callFunc()
         {
             var client = new RestClient($"http://localhost:3000/dev/private/FI/getPreSignedUrlForRetrieval?loan_type=Auto&profile_id=1000111000676767&__loan_id=auyghu&filename=loan.tgz");
-            client.Authenticator = new JwtAuthenticator("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbmNyeXB0ZWRQYXlsb2FkIjoid3M3K2w2VTlSNHFRVzYzaTZGQm9JeEx6VWNSSFdYT09SYkxXSzl3czRUVW94d0VsNHZuRVU0M05EWVZ4RkU4YW9PM0RUbnpSRkV5bWl1NUxpMFQ4WGJyNkR3L2ZhbXRKQkxxTGhQM29EcGp0K1JDWnorQWVacFQzcWs5Q0Q0T0I1bDBjSzBaSDAyNmdJK2o1eUNhemtraUhXSzJ3RndpMEFCRXZyeWRoM1ROVVdGcWRlK3pSbjh3aDUwTmgwQWZ1eHlKTEppczNhTWs2Vm01TmtINXJuY0ZLQ3FHcEFBQWNEdmxpZExmQ1dsZz0iLCJpYXQiOjE2MDM3ODQxNjEsImV4cCI6MTYwMzg3MDU2MX0.RMGVzadbXtZLoZw71ClT2Sya_xEUIFlvMUirATr0lL0");
+            client.Authenticator = new JwtAuthenticator("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbmNyeXB0ZWRQYXlsb2FkIjoid3M3K2w2VTlSNHFRVzYzaTZGQm9JeEx6VWNSSFdYT09SYkxXSzl3czRUVW94d0VsNHZuRVU0M05EWVZ4RkU4YW9PM0RUbnpSRkV5bWl1NUxpMFQ4WGJyNkR3L2ZhbXRKQkxxTGhQM29EcGp0K1JDWnorQWVacFQzcWs5Q0Q0T0I1bDBjSzBaSDAyNmdJK2o1eUNhemtraUhXSzJ3RndpMEFCRXZyeWRoM1ROVVdGcWRlK3pSbjh3aDUwTmgwQWZ1eHlKTEppczNhTWs2Vm01TmtINXJuY0ZLQ3FHcEFBQWNEdmxpZExmQ1dsZz0iLCJpYXQiOjE2MDQwNTAzNjMsImV4cCI6MTYwNDEzNjc2M30.ZcoOLR1bgwpsg9FAK8mrqllDud295hLjREHrEa-xmLo");
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -86,11 +88,11 @@ namespace PhotoPreview
             request.AddHeader("content-type", "application/octet-stream");
             byte[] response = client.DownloadData(request);
             Directory.CreateDirectory("Doc");
-            File.WriteAllBytes($"x.tgz", response);
+            File.WriteAllBytes($"loan.tgz", response);
 
             int x = 0;
 
-            ExtractTGZ("x.tgz", "Doc");
+            ExtractTGZ("loan.tgz", "Doc");
 
             /*Directory.CreateDirectory("extracted");
             ZipFile.ExtractToDirectory("x", "extracted");*/
@@ -124,7 +126,7 @@ namespace PhotoPreview
         private void CreateDir()
         {
             Directory.CreateDirectory("CreateZip");
-            System.IO.File.Copy("C:\\Users\\ashis\\OneDrive\\Pictures\\try.jpeg", "CreateZip\\try.jpeg", true);
+            System.IO.File.Copy("C:\\Users\\sarin\\Documents\\Scented Candels\\FrontLogo.png", "CreateZip\\FrontLogo.png", true);
             //File.WriteAllText(System.IO.Path.Combine("CreateZip", "try.jpeg"), "C:\\Users\\ashis\\OneDrive\\Pictures\\try.JPEG");
             //System.IO.Path.Combine("CreateZip", "C:\\Users\\ashis\\OneDrive\\Pictures\\try.jpeg");
             string path = CreateTGZ("CreateZip", "loan", "Extracted");
@@ -134,14 +136,16 @@ namespace PhotoPreview
             callFunc();
         }
 
-        public void ExtractTGZ(String tarFileName, String destFolder)
+        public void ExtractTGZ(String gzArchiveName, String destFolder)
         {
-            Stream inStream = File.OpenRead(tarFileName);
+            Stream inStream = File.OpenRead(gzArchiveName);
+            Stream gzipStream = new GZipInputStream(inStream);
 
-            TarArchive tarArchive = TarArchive.CreateInputTarArchive(inStream, Encoding.ASCII);
+            TarArchive tarArchive = TarArchive.CreateInputTarArchive(gzipStream, Encoding.ASCII);
             tarArchive.ExtractContents(destFolder);
             tarArchive.Close();
 
+            gzipStream.Close();
             inStream.Close();
         }
 
@@ -216,7 +220,7 @@ namespace PhotoPreview
         public bool InsertFiAttachments()
         {
             var client = new RestClient($"http://localhost:3000/dev/private/FI/getPreSignedUrl?loan_type=Auto&profile_id=1000111000676767&__loan_id=auyghu&filename=loan.tgz");
-            client.Authenticator = new JwtAuthenticator("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbmNyeXB0ZWRQYXlsb2FkIjoid3M3K2w2VTlSNHFRVzYzaTZGQm9JeEx6VWNSSFdYT09SYkxXSzl3czRUVW94d0VsNHZuRVU0M05EWVZ4RkU4YW9PM0RUbnpSRkV5bWl1NUxpMFQ4WGJyNkR3L2ZhbXRKQkxxTGhQM29EcGp0K1JDWnorQWVacFQzcWs5Q0Q0T0I1bDBjSzBaSDAyNmdJK2o1eUNhemtraUhXSzJ3RndpMEFCRXZyeWRoM1ROVVdGcWRlK3pSbjh3aDUwTmgwQWZ1eHlKTEppczNhTWs2Vm01TmtINXJuY0ZLQ3FHcEFBQWNEdmxpZExmQ1dsZz0iLCJpYXQiOjE2MDM3ODQxNjEsImV4cCI6MTYwMzg3MDU2MX0.RMGVzadbXtZLoZw71ClT2Sya_xEUIFlvMUirATr0lL0");
+            client.Authenticator = new JwtAuthenticator("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbmNyeXB0ZWRQYXlsb2FkIjoid3M3K2w2VTlSNHFRVzYzaTZGQm9JeEx6VWNSSFdYT09SYkxXSzl3czRUVW94d0VsNHZuRVU0M05EWVZ4RkU4YW9PM0RUbnpSRkV5bWl1NUxpMFQ4WGJyNkR3L2ZhbXRKQkxxTGhQM29EcGp0K1JDWnorQWVacFQzcWs5Q0Q0T0I1bDBjSzBaSDAyNmdJK2o1eUNhemtraUhXSzJ3RndpMEFCRXZyeWRoM1ROVVdGcWRlK3pSbjh3aDUwTmgwQWZ1eHlKTEppczNhTWs2Vm01TmtINXJuY0ZLQ3FHcEFBQWNEdmxpZExmQ1dsZz0iLCJpYXQiOjE2MDQwNTAzNjMsImV4cCI6MTYwNDEzNjc2M30.ZcoOLR1bgwpsg9FAK8mrqllDud295hLjREHrEa-xmLo");
             var request = new RestRequest(Method.GET);
             request.AddHeader("content-type", "text/plain");
             IRestResponse response = client.Execute(request);
@@ -256,6 +260,12 @@ namespace PhotoPreview
             {
                 return false;
             }
+        }
+
+        private void imgDynamic_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            System.Diagnostics.Process.Start(resourceUri.ToString());
+
         }
     }
 }

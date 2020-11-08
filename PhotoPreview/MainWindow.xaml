@@ -41,7 +41,8 @@
                         Height="300"
                         Margin="10"
                         Cursor="Hand"
-                        Stretch="Fill" />
+                        Stretch="Fill"
+                        MouseDown="imgDynamic_MouseDown"/>
                 </WrapPanel>
                 <WrapPanel x:Name="Landmark">
                     <Label
